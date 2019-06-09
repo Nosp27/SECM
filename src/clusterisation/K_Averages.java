@@ -9,12 +9,15 @@ public class K_Averages {
         points = _points;
     }
 
-    public Cluster[] clusterize(int k) {
+    public final Cluster[] clusterize(int k) {
+        int countIterations = 0;
         Cluster[] cs = new Cluster[k];
         initCentroids(cs, k);
         do {
+            countIterations++;
             associatePoints(cs, k);
         }while (changeCentroids(cs, k));
+        System.out.println(k + " Clusters, " + countIterations + " iterations");
         return cs;
     }
 
@@ -28,8 +31,9 @@ public class K_Averages {
         boolean changed = false;
         for(int i = 0; i < k; i++){
             Float[] newPosition = countNewCentroid(cs[i]);
-            if(newPosition != cs[i].center)
+            if(cs[i].distance(newPosition) > 0)
                 changed = true;
+            cs[i].center = newPosition;
         }
         return changed;
     }
@@ -42,7 +46,6 @@ public class K_Averages {
         }
         newPosition[0] /= c.getPoints().size();
         newPosition[1] /= c.getPoints().size();
-        c.center = newPosition;
         return newPosition;
     }
 
@@ -64,5 +67,10 @@ public class K_Averages {
 
             nearest.addPoint(point);
         }
+    }
+
+    @Override
+    public String toString() {
+        return " Averages algorythm";
     }
 }

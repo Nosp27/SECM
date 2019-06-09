@@ -7,6 +7,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="xchart-3.5.4" level="project" />
+    <orderEntry type="library" name="org.knowm.xchart:xchart:3.5.4" level="project" />
+    <orderEntry type="library" name="org.ejml:ejml-all:0.38" level="project" />
   </component>
 </module>
