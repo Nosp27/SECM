@@ -1,5 +1,8 @@
+package tasks;
+
+import correlation.MatStatTask;
+
 import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class Task1 extends MatStatTask {
 
@@ -11,6 +14,7 @@ public class Task1 extends MatStatTask {
         drawGist(D, 10, 20);
 
         D = X(10);
+        System.out.println(Arrays.toString(D));
         double avg = avg(D);
         double disp = disp(D, avg);
         System.out.println(Arrays.toString(confidenceIntervalStudent(D, avg, disp)));
