@@ -9,6 +9,8 @@ public class Regression {
     private ArrayList<Float[]> data;
     private int k;
     private float[] _y, b, e;
+    private float[][] xdata;
+    private float[][] ydata;
     private Float ESS, TSS, RSS;
 
     public Regression(ArrayList<Float[]> data) {
@@ -17,19 +19,21 @@ public class Regression {
     }
 
     private void regress() {
-        float[][] xdata = new float[data.size()][data.get(0).length + 1];
-        float[][] ydata = new float[data.size()][1];
+        xdata = new float[data.size()][data.get(0).length];
+        ydata = new float[data.size()][1];
         for (int i = 0; i < data.size(); i++) {
             ydata[i][0] = data.get(i)[0];
-            for (int j = 0; j <= data.get(0).length; j++) {
+            for (int j = 0; j < data.get(0).length; j++) {
                 if (j == 0)
                     xdata[i][j] = 1;
                 else
-                    xdata[i][j] = data.get(i)[j-1];
+                    xdata[i][j] = data.get(i)[j];
             }
         }
         SimpleMatrix x = new SimpleMatrix(xdata);
         SimpleMatrix y = new SimpleMatrix(ydata);
+//        System.out.println(x.toString());
+//        System.out.println(y.toString());
         SimpleMatrix _b = x.transpose().mult(x);
         _b = _b.invert();
         _b = _b.mult(x.transpose()).mult(y);
@@ -45,6 +49,18 @@ public class Regression {
             _y[i] = (float) yVec.get(i, 0);
             e[i] = (float) (y.get(i, 0) - _y[i]);
         }
+    }
+
+    public float[][] xdata() {
+        if (xdata == null)
+            regress();
+        return xdata;
+    }
+
+    public float[][] ydata() {
+        if (ydata == null)
+            regress();
+        return ydata;
     }
 
     public float[] b() {
@@ -94,26 +110,33 @@ public class Regression {
         return TSS;
     }
 
+    public static float determ(Regression r1, Regression r2) {
+        float rk1 = -1+r1.R_kvadrat();
+        float rk2 = -1+r2.R_kvadrat();
+
+        return ((rk1 - rk2) * (r1.data.size() - r1.k)) / ((1 - rk1) * 2);
+    }
+
     public float R_kvadrat() {
         return 1 - RSS() / TSS();
     }
 
-    public float fStatistic(){
-        return (ESS()/(k-1))/(RSS()/(data.size() - k));
+    public float fStatistic() {
+        return (ESS() / (k - 1)) / (RSS() / (data.size() - k));
     }
 
-    public boolean isValidAtQuantile(float q){
+    public boolean isValidAtQuantile(float q) {
         float F = fStatistic();
         return F >= q;
     }
 
     @Override
     public String toString() {
-        return "\tb = " + Arrays.toString(b())+
-                "\r\n\t" +"ESS= " + ESS() +
-                "\r\n\t" +"RSS= " + RSS() +
-                "\r\n\t" +"TSS= " + TSS() +
-                "\r\n\t" +"R^2= " + R_kvadrat() +
-                "\r\n\t" +"Valid at 5%: " + isValidAtQuantile(3.2f) + " (" + fStatistic() + ")";
+        return "\tb = " + Arrays.toString(b()) +
+                "\r\n\t" + "ESS= " + ESS() +
+                "\r\n\t" + "RSS= " + RSS() +
+                "\r\n\t" + "TSS= " + TSS() +
+                "\r\n\t" + "R^2= " + R_kvadrat() +
+                "\r\n\t" + "Valid at 5%: " + isValidAtQuantile(3.2f) + " (" + fStatistic() + ")";
     }
 }

@@ -37,7 +37,7 @@ public class DisplayFactory {
         frame.setVisible(true);
     }
 
-    private static class my_marker extends Diamond{
+    public static class my_marker extends Diamond{
         private int sz;
         public my_marker(int size){
             sz = size;
