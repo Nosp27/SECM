@@ -31,7 +31,7 @@ public class DataReader {
             int currentOffset = 0;
             while ((line = br.readLine()) != null) {
                 currentOffset++;
-                if(currentOffset <= offset)
+                if (currentOffset <= offset)
                     continue;
                 Float[] data = new Float[n + additionals.length + (binaryTraits == null ? 0 : binaryTraits.size())];
                 ArrayList<Float> a = new ArrayList<>();
@@ -60,12 +60,32 @@ public class DataReader {
                     if (condition == null || condition.test(a))
                         res.add(data);
                 } catch (Exception e) {
-
+                    System.out.println();
                 }
             }
-            return res;
+            return norm(res);
         } catch (IOException e) {
             throw new RuntimeException();
         }
+    }
+
+    private static ArrayList<Float[]> norm(ArrayList<Float[]> raw) {
+        Float[] maximums = new Float[raw.get(0).length];
+        for (int i = 0; i < raw.size(); i++) {
+            for (int j = 1; j < maximums.length; j++) {
+                if (maximums[j] == null || raw.get(i)[j] > maximums[j]) {
+                    maximums[j] = raw.get(i)[j];
+                }
+            }
+        }
+
+        for (int i = 0; i < raw.size(); i++) {
+            for (int j = 1; j < maximums.length; j++) {
+                if (maximums[j] != 0)
+                    raw.get(i)[j] /= maximums[j];
+            }
+        }
+
+        return raw;
     }
 }

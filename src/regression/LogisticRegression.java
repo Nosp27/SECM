@@ -8,8 +8,8 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class LogisticRegression extends AbstractRegression {
-    private double learningRate;
-    private int epochs;
+    double learningRate;
+    int epochs;
     private ArrayList<Float> cost_function;
 
     public LogisticRegression(ArrayList<Float[]> data, int epochs, double learningRate) {
@@ -27,9 +27,9 @@ public class LogisticRegression extends AbstractRegression {
         SimpleMatrix theta = new SimpleMatrix(k, 1);
         theta = theta.plus(1);
         cost_function = new ArrayList<>();
-
+        SimpleMatrix h = theta;
         for (int epochNum = 0; epochNum < epochs; epochNum++) {
-            SimpleMatrix h = theta.transpose().mult(x.transpose()).transpose();
+            h = theta.transpose().mult(x.transpose()).transpose();
             for (int row = 0; row < h.numRows(); row++) {
                 h.set(row, 0, activation(h.get(row, 0)));
             }
@@ -40,7 +40,7 @@ public class LogisticRegression extends AbstractRegression {
                 cost += -yi * Math.log((hi) - (1 - yi) * Math.log(1 - hi));
             }
             cost_function.add(cost);
-            SimpleMatrix thetaGradient = h.minus(y).transpose().mult(x).transpose();
+            SimpleMatrix thetaGradient = gradient(x, y, h);
             theta = theta.minus(thetaGradient.scale(learningRate));
         }
 
@@ -48,33 +48,24 @@ public class LogisticRegression extends AbstractRegression {
         for (int i = 0; i < theta.numRows(); i++) {
             b[i] = (float) theta.get(i, 0);
         }
+
+        for (int i = 0; i < data.size(); i++) {
+            _y[i] = (float) h.get(i, 0);
+            e[i] = (float) (y.get(i, 0) - _y[i]);
+        }
+    }
+
+    protected SimpleMatrix gradient(SimpleMatrix x, SimpleMatrix y, SimpleMatrix h) {
+        return h.minus(y).transpose().mult(x).transpose();
     }
 
     @Override
     protected double activation(double raw) {
-        return (float) (1f / (1f + Math.exp(-raw)));
-    }
-
-    public float accuracy(float acceptLevel) {
-        float hits = 0;
-
-        for (Float[] _d : data) {
-            float prediction = prediction(toPrimitive(_d));
-            if ((prediction > acceptLevel) == (_d[0] == 1))
-                hits += 1;
-        }
-        return hits / data.size();
-    }
-
-    float[] toPrimitive(Float[] origin) {
-        float[] primitive = new float[origin.length];
-        for (int i = 0; i < primitive.length; i++)
-            primitive[i] = origin[i];
-        return primitive;
+        return (1f / (1f + Math.exp(-raw)));
     }
 
     @Override
-    public String toString() {
-        return "\tb = " + Arrays.toString(b());
+    public String getType() {
+        return "Logistic";
     }
 }
