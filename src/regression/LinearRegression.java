@@ -5,29 +5,19 @@ import org.ejml.simple.SimpleMatrix;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Regression {
-    private ArrayList<Float[]> data;
-    private int k;
-    private float[] _y, b, e;
+public class LinearRegression extends AbstractRegression {
+    protected float[] _y, e;
     private Float ESS, TSS, RSS;
 
-    public Regression(ArrayList<Float[]> data) {
+    public LinearRegression(ArrayList<Float[]> data) {
         this.data = data;
         k = data.get(0).length;
     }
 
-    private void regress() {
-        float[][] xdata = new float[data.size()][data.get(0).length + 1];
-        float[][] ydata = new float[data.size()][1];
-        for (int i = 0; i < data.size(); i++) {
-            ydata[i][0] = data.get(i)[0];
-            for (int j = 0; j <= data.get(0).length; j++) {
-                if (j == 0)
-                    xdata[i][j] = 1;
-                else
-                    xdata[i][j] = data.get(i)[j-1];
-            }
-        }
+    protected void regress0() {
+        _y = new float[data.size()];
+        e = new float[data.size()];
+        b = new float[k];
         SimpleMatrix x = new SimpleMatrix(xdata);
         SimpleMatrix y = new SimpleMatrix(ydata);
         SimpleMatrix _b = x.transpose().mult(x);
@@ -35,22 +25,13 @@ public class Regression {
         _b = _b.mult(x.transpose()).mult(y);
         SimpleMatrix yVec = x.mult(_b);
 
-        b = new float[k];
         for (int i = 0; i < k; i++)
             b[i] = (float) _b.get(i, 0);
 
-        _y = new float[data.size()];
-        e = new float[data.size()];
         for (int i = 0; i < data.size(); i++) {
             _y[i] = (float) yVec.get(i, 0);
             e[i] = (float) (y.get(i, 0) - _y[i]);
         }
-    }
-
-    public float[] b() {
-        if (b == null)
-            regress();
-        return b;
     }
 
     public float[] e() {
