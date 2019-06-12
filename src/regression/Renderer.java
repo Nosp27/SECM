@@ -88,4 +88,16 @@ public class Renderer {
         frame.pack();
         frame.setVisible(true);
     }
+
+    public static void renderGradient(ProbitRegression r) {
+        JFrame frame = new JFrame(r.getType() + " Regression S/S");
+        XYChart chart = new XYChart(500, 700);
+
+        for (int i = 0; i < r.plotData.length; i++) {
+            chart.addSeries("k = " + i, r.plotData[i]);
+        }
+        frame.setContentPane(new XChartPanel<>(chart));
+        frame.pack();
+        frame.setVisible(true);
+    }
 }

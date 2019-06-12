@@ -12,7 +12,7 @@ public class Task5 {
         ArrayList<Function<Float[], Float>> binaryTraits = new ArrayList<>();
         binaryTraits.add(data->data[data.length-1]==1 ? 1f : 0f);
         binaryTraits.add(data->data[data.length-1]==2 ? 1f : 0f);
-        ArrayList<Float[]> trainig = DataReader.read("secm/hw5/data", 5, data->data.size() == 6, binaryTraits);
+        ArrayList<Float[]> trainig = DataReader.read("secm/hw5/data", 5, data->data.get(0) != 2, binaryTraits);
         ArrayList<Float[]> test = DataReader.read("secm/hw5/data", 5, data->data.get(0) == 2, binaryTraits);
 
         System.out.println("Linear Regression");
@@ -27,28 +27,29 @@ public class Task5 {
 
         System.out.println("____________________________________________\n");
         System.out.println("Probability based Regression");
-        ProbitRegression probitRegression = new ProbitRegression(trainig, 10, .0001);
+        ProbitRegression probitRegression = new ProbitRegression(trainig, 5, 1);
         System.out.println(probitRegression.toString());
         System.out.println("\tAccuracy: " + probitRegression.accuracy(.45f));
+        Renderer.renderGradient(probitRegression);
 
         Renderer.renderAccuracy(linearRegression);
         Renderer.renderAccuracy(logisticRegression);
         Renderer.renderAccuracy(probitRegression);
-        Renderer.renderSS(logisticRegression);
-
-        System.out.println("____________________________________________\n");
-        System.out.println("Linear Regression");
-        for(int i = 0; i < test.size(); i++)
-            System.out.println(linearRegression.prediction(test.get(i)));
-
-        System.out.println("____________________________________________\n");
-        System.out.println("Logit Regression");
-        for(int i = 0; i < test.size(); i++)
-            System.out.println(logisticRegression.prediction(test.get(i)));
-
-        System.out.println("____________________________________________\n");
-        System.out.println("Probit Regression");
-        for(int i = 0; i < test.size(); i++)
-            System.out.println(probitRegression.prediction(test.get(i)));
+        Renderer.renderSS(probitRegression);
+//
+//        System.out.println("____________________________________________\n");
+//        System.out.println("Linear Regression");
+//        for(int i = 0; i < test.size(); i++)
+//            System.out.println(linearRegression.prediction(test.get(i)));
+//
+//        System.out.println("____________________________________________\n");
+//        System.out.println("Logit Regression");
+//        for(int i = 0; i < test.size(); i++)
+//            System.out.println(logisticRegression.prediction(test.get(i)));
+//
+//        System.out.println("____________________________________________\n");
+//        System.out.println("Probit Regression");
+//        for(int i = 0; i < test.size(); i++)
+//            System.out.println(probitRegression.prediction(test.get(i)));
     }
 }

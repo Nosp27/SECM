@@ -5,25 +5,34 @@ import org.apache.commons.math.distribution.NormalDistributionImpl;
 import org.ejml.simple.SimpleMatrix;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ProbitRegression extends LogisticRegression {
 
+    SimpleMatrix x, y, theta, h;
+
+    private int epochNum;
+    double[][] plotData;
+
     public ProbitRegression(ArrayList<Float[]> data, int epochs, double learningRate) {
         super(data, epochs, learningRate);
+        plotData = new double[k + 1][epochs];
     }
 
     @Override
     protected void regress0() {
-        SimpleMatrix x = new SimpleMatrix(xdata);
-        SimpleMatrix y = new SimpleMatrix(ydata);
+        x = new SimpleMatrix(xdata);
+        y = new SimpleMatrix(ydata);
 
-        SimpleMatrix theta = new SimpleMatrix(k, 1);
-        SimpleMatrix h = theta;
+        theta = new SimpleMatrix(k, 1);
+        h = theta;
 //        theta = theta.plus(1);
-        for (int epochNum = 0; epochNum < epochs; epochNum++) {
+        for (epochNum = 0; epochNum < epochs; epochNum++) {
             h = theta.transpose().mult(x.transpose()).transpose();
             SimpleMatrix thetaGradient = gradient(x, y, h);
-            theta = theta.minus(thetaGradient.scale(learningRate));
+            theta = theta.plus(thetaGradient.scale(learningRate));
 
             b = new float[k];
             for (int i = 0; i < theta.numRows(); i++) {
@@ -36,6 +45,9 @@ public class ProbitRegression extends LogisticRegression {
             }
 
             RSS = null;
+            ESS = null;
+            TSS = null;
+            plotData[k][epochNum] = R_kvadrat();
 //            System.out.println(RSS());
         }
     }
@@ -58,25 +70,42 @@ public class ProbitRegression extends LogisticRegression {
         return coeff * Math.exp(pow);
     }
 
-    private double lyambda(int i, SimpleMatrix h, SimpleMatrix y){
-        double qi = 2 * y.get(i, 0) - 1;
-        double hi = h.get(i, 0);
-        return gauss(qi*hi)*qi/activation(qi*hi);
-    }
-
-    private double sd(SimpleMatrix x, SimpleMatrix y, SimpleMatrix h){
-        double sd = 0;
-        for(int i = 0; i < data.size(); i++){
-            double hi = h.get(i, 0);
-            double lyambda = lyambda(i, h, y);
-            SimpleMatrix _x = x.rows(i,i+1);
-            sd+=lyambda*(hi+lyambda)*_x.transpose().mult(_x).get(0);
-        }
-        return sd;
-    }
-
     @Override
     protected SimpleMatrix gradient(SimpleMatrix x, SimpleMatrix y, SimpleMatrix h) {
+        return gradientMatrix();
+    }
+
+    private SimpleMatrix gradientMatrix() {
+        SimpleMatrix gradient = new SimpleMatrix(k, 1);
+        Supplier<SimpleMatrix> lyambda = () -> {
+            SimpleMatrix ret = new SimpleMatrix(data.size(), 1);
+            for (int i = 0; i < data.size(); i++) {
+                double qi = 2 * y.get(i, 0) - 1;
+                double hi = h.get(i);
+                ret.set(i, gauss(qi * hi) * qi / activation(qi * hi));
+            }
+            return ret;
+        };
+        //count lysmbdas
+        SimpleMatrix lyamblaVector = lyambda.get();
+        double[] diag = new double[data.size()];
+        for (int i = 0; i < data.size(); i++) {
+            double _lyambla = lyamblaVector.get(i);
+            diag[i] = _lyambla * (h.get(i, 0) + _lyambla);
+        }
+        SimpleMatrix lt = lyambda.get();
+        SimpleMatrix W = SimpleMatrix.diag(diag);
+        SimpleMatrix xT = x.transpose();
+        SimpleMatrix mc = (xT.mult(W).mult(x).invert().mult(xT).mult(lt));
+        gradient = mc;
+
+        for (int i = 0; i < k; i++)
+            plotData[i][epochNum] = mc.get(i);
+
+        return gradient;
+    }
+
+    private SimpleMatrix gradientCyclic(SimpleMatrix x, SimpleMatrix y, SimpleMatrix h) {
         double sum = 0;
         SimpleMatrix gradient = new SimpleMatrix(k, 1);
         for (int beta = 0; beta < k; beta++) {
@@ -89,7 +118,7 @@ public class ProbitRegression extends LogisticRegression {
                 double g = gauss(hi);
                 double a = activation(hi);
 //                sum += (g / (a * (1f - a))) * (yi - activation(hi)) * xi;
-                sum += (yi*(g/a) + (1-yi)*g/(1-a))*xi;
+                sum += (yi * (g / a) + (1 - yi) * g / (1 - a)) * xi;
             }
             gradient.set(beta, 0, sum);
         }
